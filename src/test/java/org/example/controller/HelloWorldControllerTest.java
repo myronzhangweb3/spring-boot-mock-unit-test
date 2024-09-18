@@ -10,8 +10,6 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.mockito.Mockito.mock;
-
 @SpringBootTest
 public class HelloWorldControllerTest {
 
@@ -37,7 +35,7 @@ public class HelloWorldControllerTest {
 
         // 验证结果
         Assert.assertEquals("0", result.getCode());
-        Assert.assertEquals("Hello World Mock For SayWordsResponse", ((SayWordsResponse)(result.getResult())).getWords());
+        Assert.assertEquals("Hello World Mock For SayWordsResponse", ((SayWordsResponse) (result.getResult())).getWords());
     }
 
     /**

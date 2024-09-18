@@ -1,4 +1,3 @@
-
 package org.example.controller;
 
 import org.example.bean.ResponseData;
