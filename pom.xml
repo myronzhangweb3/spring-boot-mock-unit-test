@@ -32,27 +32,16 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.easymock</groupId>-->
-<!--            <artifactId>easymock</artifactId>-->
-<!--            <version>2.0</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>junit</groupId>-->
-<!--            <artifactId>junit</artifactId>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
         <!-- 先声明jmockit的依赖-->
         <dependency>
             <groupId>org.jmockit</groupId>
             <artifactId>jmockit</artifactId>
-            <version>1.49</version> <!-- 请根据需要选择版本 -->
+            <version>1.49</version>
             <scope>test</scope>
         </dependency>
         <!-- 再声明junit的依赖 -->
@@ -65,7 +54,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.28</version> <!-- 请检查最新版本 -->
+            <version>1.18.28</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
