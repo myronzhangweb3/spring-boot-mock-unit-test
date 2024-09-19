@@ -10,6 +10,10 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.HashMap;
+
+import static org.mockito.Mockito.mock;
+
 /**
  * 标记该类为 Spring Boot 测试类，自动加载 Spring 上下文
  */
@@ -41,7 +45,7 @@ public class HelloWorldControllerTest {
         // 设置期望
         new Expectations() {{
             // 当调用 service.sayHello() 方法时，返回一个 SayWordsResponse 对象
-            service.sayHello();
+            service.sayHello(new HashMap<>());
             // 定义 mock 返回的结果
             result = new SayWordsResponse("Hello World Mock For SayWordsResponse");
         }};
@@ -65,7 +69,7 @@ public class HelloWorldControllerTest {
         // 设置期望
         new Expectations() {{
             // 当调用 service.sayHello() 方法时，抛出一个异常
-            service.sayHello();
+            service.sayHello(new HashMap<>());
             // 定义 mock 返回的结果
             result = new Exception("Service Exception");
         }};

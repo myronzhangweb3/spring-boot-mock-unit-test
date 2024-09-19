@@ -10,6 +10,8 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.HashMap;
+
 /**
  * 标记该类为 Spring Boot 测试类，自动加载 Spring 上下文
  */
@@ -41,13 +43,13 @@ public class HelloWorldServiceTest {
         // 设置期望
         new Expectations() {{
             // 当调用 mapper.sayHello() 方法时，返回一个 SayWordsBean 对象
-            mapper.sayHello();
+            mapper.sayHello(new HashMap<>());
             // 定义 mock 返回的结果
             result = new SayWordsBean("Hello World Mock For SayWordsBean");
         }};
 
         // 调用被测试的方法
-        SayWordsResponse result = service.sayHello();
+        SayWordsResponse result = service.sayHello(new HashMap<>());
 
         // 验证结果
         // 断言返回的 SayWordsResponse 对象的 words 属性是否等于预期的字符串
