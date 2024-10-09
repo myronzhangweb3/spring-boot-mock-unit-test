@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API 调用示例</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,7 +12,7 @@
             background-color: #f4f4f4;
         }
 
-        h1, h2 {
+        h1, h2, h3 {
             color: #333;
         }
 
@@ -24,37 +25,52 @@
         }
 
         input, textarea, button {
-            width: 100%;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 4px;
+            width: calc(50% - 12px); /* 默认宽度设置为50% - padding和边框尺寸 */
         }
 
-        .file-input-container {
-            display: flex; /* 使用 flexbox 布局 */
-            align-items: center; /* 垂直居中对齐 */
+        .dynamic-fields {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
-        .file-input-container input[type="text"] {
-            margin-right: 10px; /* 添加右边距以分隔两个输入框 */
-            flex-grow: 1; /* 使文本框占据剩余空间 */
+        .dynamic-fields input {
+            flex: 1;
+            min-width: 0; /* 防止输入框在flex布局内变为零宽度 */
         }
 
-        .file-input-container input[type="file"] {
-            flex-shrink: 0; /* 防止文件输入框缩小 */
-            width: auto; /* 使文件输入框宽度自适应 */
+        .dynamic-fields button {
+            flex: 0 0 auto;
         }
 
-        button {
-            background-color: #28a745;
+        .fields-container {
+            margin-bottom: 10px;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .add-field-btn {
+            margin-top: -10px;
+            margin-bottom: 10px;
+            background-color: #007bff;
             color: white;
             border: none;
             cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            width: auto; /* 防止按钮占据过多宽度 */
         }
 
-        button:hover {
-            background-color: #218838;
+        .add-field-btn:hover {
+            background-color: #0056b3;
         }
 
         pre {
@@ -62,6 +78,17 @@
             padding: 10px;
             border-radius: 4px;
             overflow: auto;
+        }
+
+        button.primary {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button.primary:hover {
+            background-color: #218838;
         }
     </style>
 </head>
@@ -71,163 +98,242 @@
 <div class="container">
     <h2>GET 请求</h2>
     <input type="text" id="getUrl" placeholder="输入 GET 请求 URL">
-    <button onclick="sendGetRequest()">发送 GET 请求</button>
+    <h3>请求 Headers</h3>
+    <div id="getHeadersContainer" class="fields-container"></div>
+    <div class="btn-container">
+        <button class="add-field-btn" onclick="addHeaderField('getHeadersContainer')">添加请求参数</button>
+    </div>
+    <div>
+        <button class="primary" onclick="sendGetRequest()">发送 GET 请求</button>
+    </div>
     <pre id="getResponse"></pre>
 </div>
 
 <div class="container">
     <h2>POST 请求 (JSON)</h2>
     <input type="text" id="postJsonUrl" placeholder="输入 POST 请求 URL">
-    <textarea id="jsonData" rows="4" placeholder='输入 JSON 数据，例如 {"key": "value"}'></textarea>
-    <button onclick="sendPostJsonRequest()">发送 POST 请求</button>
+    <h3>请求 Headers</h3>
+    <div id="postJsonHeadersContainer" class="fields-container"></div>
+    <button class="add-field-btn" onclick="addHeaderField('postJsonHeadersContainer')">添加请求参数</button>
+    <h3>请求 Body</h3>
+    <div id="postJsonDataContainer" class="fields-container"></div>
+    <!-- The field button placement was moved outside of btn-container to keep context -->
+    <button class="add-field-btn" onclick="addDataField('postJsonDataContainer')">添加请求参数</button>
+
+    <div>
+        <button class="primary" onclick="sendPostJsonRequest()">发送 POST 请求</button>
+    </div>
     <pre id="postJsonResponse"></pre>
 </div>
 
 <div class="container">
     <h2>POST 请求 (Form Data + 上传 File)</h2>
     <input type="text" id="postFileUrl" placeholder="输入 POST 请求 URL">
-    <textarea id="otherParams" rows="4" placeholder='输入其他参数，例如 key1=value1, key2=value2'></textarea>
+    <h3>请求 Headers</h3>
+    <div id="postFileHeadersContainer" class="fields-container"></div>
+    <div class="btn-container">
+        <button class="add-field-btn" onclick="addHeaderField('postFileHeadersContainer')">添加请求参数</button>
+    </div>
+    <h3>请求 Body</h3>
+    <div id="postFileDataContainer" class="fields-container"></div>
+    <!-- The field button placement was moved outside of btn-container to keep context -->
+    <button class="add-field-btn" onclick="addDataField('postFileDataContainer')">添加请求参数</button>
     <div class="file-input-container">
         <input type="text" id="fileKey" placeholder="输入文件键（key）">
         <input type="file" id="fileInput">
     </div>
-    <button onclick="sendPostFileRequest()">发送 POST 请求</button>
+
+    <div>
+        <button class="primary" onclick="sendPostFileRequest()">发送 POST 请求</button>
+    </div>
     <pre id="postFileResponse"></pre>
 </div>
 
 <script>
+    function createFieldHTML() {
+        return `
+            <div class="dynamic-fields">
+                <input type="text" placeholder="Key">
+                <input type="text" placeholder="Value">
+                <button type="button" onclick="removeField(this)">删除</button>
+            </div>`;
+    }
+
+    function addHeaderField(containerId) {
+        const container = document.getElementById(containerId);
+        container.insertAdjacentHTML('beforeend', createFieldHTML());
+    }
+
+    function addDataField(containerId) {
+        const container = document.getElementById(containerId);
+        container.insertAdjacentHTML('beforeend', createFieldHTML());
+    }
+
+    function removeField(button) {
+        button.parentElement.remove();
+    }
+
+    function collectFields(containerId) {
+        const container = document.getElementById(containerId);
+        const fields = container.querySelectorAll('.dynamic-fields');
+        const result = {};
+        fields.forEach(field => {
+            const key = field.children[0].value.trim();
+            const value = field.children[1].value.trim();
+            if (key !== '') {
+                result[key] = value;
+            }
+        });
+        return result;
+    }
+
     function sendGetRequest() {
         const url = document.getElementById('getUrl').value;
-        fetch(url)
+        if (url === '') {
+            document.getElementById('getResponse').textContent = '错误: URL 不能为空';
+            return;
+        }
+
+        const headers = collectFields('getHeadersContainer');
+
+        fetch(url, {headers: headers})
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('网络响应不是 OK');
+                    throw new Error(`网络响应不是 OK: ${response.statusText}`);
                 }
-                const contentDisposition = response.headers.get('Content-Disposition');
-                const contentType = response.headers.get('Content-Type');
-                const isFileDownload = contentDisposition && contentDisposition.includes('attachment');
-
-                if (isFileDownload) {
-                    // 从 response.blob() 返回多个信息，确保能够访问 headers
-                    return response.blob().then(blob => ({ blob, response }));
-                } else if (contentType && contentType.includes('application/octet-stream')) {
-                    // 如果 Content-Disposition 为空，但是 Content-Type 提示是二进制文件
-                    return response.blob().then(blob => ({ blob, response }));
-                } else {
-                    return response.text();
-                }
+                return response.text();
             })
             .then(data => {
-                if (typeof data === 'string') {
-                    // 普通文本内容
-                    document.getElementById('getResponse').textContent = data;
-                } else {
-                    const { blob, response } = data;
-                    // 处理文件下载
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    // 获取文件名
-                    const contentDisposition = response.headers.get('Content-Disposition');
-                    const fileNameMatch = contentDisposition ? contentDisposition.match(/filename="(.+)"/) : null;
-                    const fileName = (fileNameMatch && fileNameMatch[1]) ? fileNameMatch[1] : 'downloaded_file';
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(url);
-                }
+                document.getElementById('getResponse').textContent = data;
             })
             .catch(error => {
-                document.getElementById('getResponse').textContent = '错误: ' + error;
+                document.getElementById('getResponse').textContent = `错误: ${error.message}`;
             });
     }
 
     function sendPostJsonRequest() {
         const url = document.getElementById('postJsonUrl').value;
-        const jsonData = document.getElementById('jsonData').value;
+        if (url === '') {
+            document.getElementById('postJsonResponse').textContent = '错误: URL 不能为空';
+            return;
+        }
+
+        const headers = collectFields('postJsonHeadersContainer');
+        let headersObj = {
+            'Content-Type': 'application/json'
+        };
+        headersObj = {...headersObj, ...headers};
+
+        const data = JSON.stringify(collectFields('postJsonDataContainer'));
 
         fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: jsonData
+            headers: headersObj,
+            body: data
         })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('网络响应不是 OK');
+                    throw new Error(`网络响应不是 OK: ${response.statusText}`);
                 }
-                const contentDisposition = response.headers.get('Content-Disposition');
-                const contentType = response.headers.get('Content-Type');
-                const isFileDownload = contentDisposition && contentDisposition.includes('attachment');
-
-                if (isFileDownload) {
-                    // 从 response.blob() 返回多个信息，确保能够访问 headers
-                    return response.blob().then(blob => ({ blob, response }));
-                } else if (contentType && contentType.includes('application/octet-stream')) {
-                    // 如果 Content-Disposition 为空，但是 Content-Type 提示是二进制文件
-                    return response.blob().then(blob => ({ blob, response }));
-                } else {
-                    return response.text();
-                }
+                return response.text();
             })
             .then(data => {
-                if (typeof data === 'string') {
-                    // 普通文本内容
-                    document.getElementById('postJsonResponse').textContent = data;
-                } else {
-                    const { blob, response } = data;
-                    // 处理文件下载
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    // 获取文件名
-                    const contentDisposition = response.headers.get('Content-Disposition');
-                    const fileNameMatch = contentDisposition ? contentDisposition.match(/filename="(.+)"/) : null;
-                    const fileName = (fileNameMatch && fileNameMatch[1]) ? fileNameMatch[1] : 'downloaded_file';
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(url);
-                }
+                document.getElementById('postJsonResponse').textContent = data;
             })
             .catch(error => {
-                document.getElementById('postJsonResponse').textContent = '错误: ' + error;
+                document.getElementById('postJsonResponse').textContent = `错误: ${error.message}`;
             });
     }
 
     function sendPostFileRequest() {
         const url = document.getElementById('postFileUrl').value;
         const fileKey = document.getElementById('fileKey').value;
-        const otherParams = document.getElementById('otherParams').value.split(',').reduce((acc, param) => {
-            const [key, value] = param.split('=');
-            if (key && value) {
-                acc[key.trim()] = value.trim();
-            }
-            return acc;
-        }, {});
+        if (url === '' || fileKey === '') {
+            document.getElementById('postFileResponse').textContent = '错误: URL 和文件键不能为空';
+            return;
+        }
 
-        const fileInput = document.getElementById('fileInput');
+        const headers = collectFields('postFileHeadersContainer');
+        let headersObj = {...headers};
+        console.log("headersObj:", headersObj)
+
         const formData = new FormData();
-
-        if (fileInput.files.length > 0 && fileKey) {
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput.files.length > 0) {
             formData.append(fileKey, fileInput.files[0]);
-            for (const [key, value] of Object.entries(otherParams)) {
-                formData.append(key, value);
+            const data = collectFields('postFileDataContainer');
+            for (const key in data) {
+                formData.append(key, data[key]);
+            }
+
+            axios.defaults.withCredentials = true;//允许跨域携带cookie信息
+
+            axios.post(url, formData, {
+                headers: {
+                    ...headersObj,
+                    'Content-Type': 'multipart/form-data'
+                },
+                withCredentials: true // 确保 Cookie 被发送
+            })
+                .then(response => {
+                    document.getElementById('postFileResponse').textContent = response.data;
+                })
+                .catch(error => {
+                    if (error.response) {
+                        // 服务端返回的错误响应
+                        document.getElementById('postFileResponse').textContent = `错误: ${error.response.statusText}`;
+                    } else if (error.request) {
+                        // 请求已发出，但没有收到响应
+                        document.getElementById('postFileResponse').textContent = '错误: No response received from server';
+                    } else {
+                        // 其他错误
+                        document.getElementById('postFileResponse').textContent = `错误: ${error.message}`;
+                    }
+                });
+        } else {
+            document.getElementById('postFileResponse').textContent = '请先选择一个文件并输入文件键。';
+        }
+    }
+
+
+    function sendPostFileRequest1() {
+        const url = document.getElementById('postFileUrl').value;
+        const fileKey = document.getElementById('fileKey').value;
+        if (url === '' || fileKey === '') {
+            document.getElementById('postFileResponse').textContent = '错误: URL 和文件键不能为空';
+            return;
+        }
+
+        const headers = collectFields('postFileHeadersContainer');
+        let headersObj = {...headers};
+        console.log("headersObj:", headersObj)
+
+        const formData = new FormData();
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput.files.length > 0) {
+            formData.append(fileKey, fileInput.files[0]);
+            const data = collectFields('postFileDataContainer');
+            for (const key in data) {
+                formData.append(key, data[key]);
             }
 
             fetch(url, {
                 method: 'POST',
-                body: formData
+                headers: headersObj,
+                body: formData,
+                credentials: 'include' // 确保 Cookie 被发送
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`网络响应不是 OK: ${response.statusText}`);
+                    }
+                    return response.text();
+                })
                 .then(data => {
-                    document.getElementById('postFileResponse').textContent = JSON.stringify(data, null, 2);
+                    document.getElementById('postFileResponse').textContent = data;
                 })
                 .catch(error => {
-                    document.getElementById('postFileResponse').textContent = '错误: ' + error;
+                    document.getElementById('postFileResponse').textContent = `错误: ${error.message}`;
                 });
         } else {
             document.getElementById('postFileResponse').textContent = '请先选择一个文件并输入文件键。';

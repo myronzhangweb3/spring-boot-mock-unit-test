@@ -10,7 +10,10 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 标记该类为 Spring Boot 测试类，自动加载 Spring 上下文
@@ -40,6 +43,13 @@ public class HelloWorldServiceTest {
      */
     @Test
     public void testHelloWorldSuccess() {
+        // 参数
+        Map<String, Object> params = new HashMap<>();
+        List<String> addDate = new ArrayList<>();
+        addDate.add("2021-01-01");
+        addDate.add("2021-01-02");
+        params.put("addDate", addDate);
+
         // 设置期望
         new Expectations() {{
             // 当调用 mapper.sayHello() 方法时，返回一个 SayWordsBean 对象
@@ -49,7 +59,7 @@ public class HelloWorldServiceTest {
         }};
 
         // 调用被测试的方法
-        SayWordsResponse result = service.sayHello(new HashMap<>());
+        SayWordsResponse result = service.sayHello(params);
 
         // 验证结果
         // 断言返回的 SayWordsResponse 对象的 words 属性是否等于预期的字符串

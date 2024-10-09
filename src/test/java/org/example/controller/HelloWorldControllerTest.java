@@ -83,4 +83,11 @@ public class HelloWorldControllerTest {
         // 断言返回的 ResponseData 对象的 result 属性是否为 null
         Assert.assertNull(result.getResult());
     }
+
+    @Test
+    public void test(){
+        String filePath = "/Users/myronzhang/MyFile/myron/java-project/springboottest/springboottest/src/main/resources/files/test.txt";
+        String fileName = filePath.substring(  filePath.lastIndexOf("/")+ 1);
+        System.out.println(fileName);
+    }
 }
