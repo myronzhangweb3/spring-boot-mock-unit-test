@@ -28,8 +28,6 @@ public class FileController {
                                    @RequestParam("fileName") String fileName,
                                    HttpServletRequest request) {
         System.out.println("params file name: " + fileName);
-
-        // 获取请求的 headers
         String userAgent = request.getHeader("User-Agent");
         String contentType = request.getHeader("Content-Type");
         String cookie = request.getHeader("Cookie");
@@ -37,18 +35,15 @@ public class FileController {
         System.out.println("Content-Type: " + contentType);
         System.out.println("Cookie: " + cookie);
 
-        // 检查文件是否为空
         if (file.isEmpty()) {
             return new ResponseData(null, "1", "文件为空");
         }
 
-        // 获取文件名
         String originalFilename = file.getOriginalFilename();
         System.out.println("originalFilename: " + originalFilename);
         File destinationFile = new File(uploadDir, originalFilename);
 
         try {
-            // 保存文件
             file.transferTo(destinationFile);
             return new ResponseData(null, "0", "上传成功: " + originalFilename);
         } catch (IOException e) {
@@ -58,26 +53,17 @@ public class FileController {
     }
 
     @GetMapping("/downloadFile/{filename:.+}")
-    public ResponseEntity<FileSystemResource> downloadFile(@PathVariable String filename) {
-        File file = new File(uploadDir, filename);
+    public ResponseEntity<FileSystemResource> downloadFileGet(@PathVariable String filename) {
+        return downloadFileInternal(filename);
+    }
 
-        // 检查文件是否存在
-        if (!file.exists()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-
-        // 设置响应头
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getName());
-
-        // 返回文件
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(new FileSystemResource(file));
+    @PostMapping("/downloadFile/{filename:.+}")
+    public ResponseEntity<FileSystemResource> downloadFilePost(@PathVariable String filename) {
+        return downloadFileInternal(filename);
     }
 
     @PostMapping("/downloadFile")
-    public ResponseEntity<Void> downloadFilePost(HttpServletResponse response, @RequestBody Map<String, String> params) {
+    public ResponseEntity<Void> downloadFilePostWithBody(HttpServletResponse response, @RequestBody Map<String, String> params) {
         String filename = params.get("fileName");
 
         if (filename == null || filename.isEmpty()) {
@@ -86,17 +72,14 @@ public class FileController {
 
         File file = new File(uploadDir, filename);
 
-        // 检查文件是否存在
         if (!file.exists()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        // 设置响应头
         response.setContentType("application/octet-stream");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
         response.setContentLength((int) file.length());
 
-        // 读取文件并写入响应
         try (FileInputStream fileInputStream = new FileInputStream(file);
              OutputStream outputStream = response.getOutputStream()) {
 
@@ -110,7 +93,21 @@ public class FileController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
-        return ResponseEntity.ok().build(); // 返回 200 状态
+        return ResponseEntity.ok().build();
     }
 
+    private ResponseEntity<FileSystemResource> downloadFileInternal(String filename) {
+        File file = new File(uploadDir, filename);
+
+        if (!file.exists()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getName());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(new FileSystemResource(file));
+    }
 }

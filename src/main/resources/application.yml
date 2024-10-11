@@ -1,4 +1,4 @@
 server:
   port: 8081
 
-file-path: /Users/myronzhang/MyFile/myron/java-project/springboottest/springboottest/src/main/resources/files
+file-path: /Users/yangyang/MyFile/Project/spring-boot-mock-unit-test/src/main/resources/files
